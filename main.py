@@ -11,6 +11,7 @@ from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from typing import List
 from pathlib import Path
+from starlette.middleware.cors import CORSMiddleware
 
 MODEL_DIR = Path("./models")
 P_DEL_DIR = Path("./PaDEL-Descriptor")
@@ -20,6 +21,14 @@ P_DEL_FINGERPRINT_XML = P_DEL_DIR / "PubchemFingerprinter.xml"
 app = FastAPI(
     title="DiaPred: GLP-1 Receptor Agonist Prediction API",
     description="A deep learning-based API for predicting the activity of molecules against the GLP-1 Receptor. It utilizes a CNN model and PubChem fingerprints to classify compounds as 'Active' or 'Inactive' and provides a confidence score and applicability domain assessment."
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class SmilesList(BaseModel):
@@ -98,11 +107,11 @@ async def predict_agonist(smiles_list: SmilesList):
 
     desc.columns = desc.columns.astype(str)
     desc.reset_index(drop=True, inplace=True)
-    
+
     desc_pca = pca_model.transform(desc)
     
     desc_reshaped = np.reshape(desc_pca, (desc_pca.shape[0], desc_pca.shape[1], 1))
-    
+
     predictions = cnn_model.predict(desc_reshaped).flatten()
     applicability_domain = calculate_applicability_domain(desc_pca)
     
@@ -127,5 +136,5 @@ async def predict_agonist_file(file: UploadFile = File(...)):
     """
     smiles_content = await file.read()
     smiles_list_str = smiles_content.decode("utf-8").splitlines()
-    
+
     return await predict_agonist(SmilesList(smiles=smiles_list_str))
