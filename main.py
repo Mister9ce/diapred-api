@@ -59,7 +59,7 @@ def run_padel_descriptor(smiles_data: List[str], output_file_path: str) -> None:
     temp_dir = os.path.abspath(Path(temp_smi_file_path).parent)
 
     padel_command = [
-        "java", "-Xms1G", "-Xmx1G", "-Djava.awt.headless=true", "-jar", padel_jar_path,
+        "java", "-Xms256m", "-Xmx256m", "-Djava.awt.headless=true", "-jar", padel_jar_path,
         "-removesalt", "-standardizenitro", "-fingerprints",
         "-descriptortypes", pubchem_fingerprinter_xml_path,
         "-dir", temp_dir,
